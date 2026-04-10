@@ -1,6 +1,6 @@
-# ESCLAB - Gestion des Commandes Internes (🚀 Premium Edition)
+# ESC-Internal (🚀 Premium Edition)
 
-Cette application professionnelle est conçue pour être hébergée sur votre propre nom de domaine. Elle utilise **Next.js 14**, **TypeScript** et un système de design **Vanilla CSS** sur-mesure.
+Cette application professionnelle est hébergée sur `esclab-academy.com/ESC-Internal/`. Elle utilise **Next.js**, **TypeScript**, **Firebase** et un système de design **Vanilla CSS** sur-mesure.
 
 ## 🌟 Fonctionnalités incluses
 - **Authentification sécurisée** : Login avec gestion des sessions locales (simulée).
