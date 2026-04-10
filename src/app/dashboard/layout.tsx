@@ -5,7 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/lib/firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
-import { isAdmin } from "@/lib/orderService";
+import { isAdmin, getRoleLabel } from "@/lib/orderService";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -21,7 +21,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         setUser({
           name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || "Utilisateur",
           email: email,
-          role: isAdmin(email) ? "Validateur" : "Utilisateur"
+          role: getRoleLabel(email)
         });
       }
     });
@@ -38,7 +38,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const menuItems = [
     { name: "Tableau de Bord", icon: "📊", path: "/dashboard" },
     { name: "Mes Demandes", icon: "📝", path: "/dashboard/my-requests" },
-    { name: "Validations", icon: "⚖️", path: "/dashboard/validations", roles: ["Validateur"] },
+    { name: "Validations", icon: "⚖️", path: "/dashboard/validations", roles: ["Validateur", "Super Administrateur"] },
   ];
 
   return (

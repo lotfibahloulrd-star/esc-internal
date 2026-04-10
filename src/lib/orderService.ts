@@ -26,16 +26,29 @@ export interface Order {
   processed_at?: any;
 }
 
+export const SUPER_ADMINS = [
+  "l.bahloul@esclab-algerie.com"
+];
+
 export const VALIDATORS = [
   "a.ouali@esclab-algerie.com",
-  "l.bahloul@esclab-algerie.com",
+  "l.bahloul@esclab-algerie.com", // Also a validator
   "l.naitsidous@esclab-algerie.com",
   "s.ouatmani@esclab-algerie.com"
 ];
 
 export const isAdmin = (email: string | null | undefined) => {
   if (!email) return false;
-  return VALIDATORS.includes(email.toLowerCase());
+  const e = email.toLowerCase();
+  return VALIDATORS.includes(e) || SUPER_ADMINS.includes(e);
+};
+
+export const getRoleLabel = (email: string | null | undefined) => {
+  if (!email) return "Utilisateur";
+  const e = email.toLowerCase();
+  if (SUPER_ADMINS.includes(e)) return "Super Administrateur";
+  if (VALIDATORS.includes(e)) return "Validateur";
+  return "Utilisateur";
 };
 
 export const orderService = {
