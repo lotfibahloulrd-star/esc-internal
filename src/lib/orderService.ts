@@ -26,6 +26,18 @@ export interface Order {
   processed_at?: any;
 }
 
+export const VALIDATORS = [
+  "a.ouali@esclab-algerie.com",
+  "l.bahloul@esclab-algerie.com",
+  "l.naitsidous@esclab-algerie.com",
+  "s.ouatmani@esclab-algerie.com"
+];
+
+export const isAdmin = (email: string | null | undefined) => {
+  if (!email) return false;
+  return VALIDATORS.includes(email.toLowerCase());
+};
+
 export const orderService = {
   async getMyOrders() {
     const user = auth.currentUser;

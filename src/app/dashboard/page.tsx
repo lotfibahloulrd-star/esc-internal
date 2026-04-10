@@ -1,24 +1,30 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { orderService, Order } from "@/lib/orderService";
+import { orderService, Order, isAdmin } from "@/lib/orderService";
+import { auth } from "@/lib/firebase";
+import { onAuthStateChanged } from "firebase/auth";
 
 export default function DashboardPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        const data = await orderService.getAllOrders();
-        setOrders(data);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setIsLoading(false);
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        try {
+          const data = isAdmin(user.email) 
+            ? await orderService.getAllOrders() 
+            : await orderService.getMyOrders();
+          setOrders(data);
+        } catch (err) {
+          console.error(err);
+        } finally {
+          setIsLoading(false);
+        }
       }
-    };
-    loadData();
+    });
+    return () => unsubscribe();
   }, []);
 
   const stats = [

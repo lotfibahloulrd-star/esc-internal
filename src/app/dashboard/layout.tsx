@@ -5,20 +5,23 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/lib/firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
+import { isAdmin } from "@/lib/orderService";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [user, setUser] = useState<{name: string, role: string} | null>(null);
+  const [user, setUser] = useState<{name: string, role: string, email: string} | null>(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       if (!firebaseUser) {
         router.push("/login");
       } else {
+        const email = firebaseUser.email || "";
         setUser({
-          name: firebaseUser.displayName || firebaseUser.email || "Utilisateur",
-          role: "Utilisateur" // On pourra affiner avec un document 'profiles' plus tard
+          name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || "Utilisateur",
+          email: email,
+          role: isAdmin(email) ? "Validateur" : "Utilisateur"
         });
       }
     });
@@ -35,8 +38,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const menuItems = [
     { name: "Tableau de Bord", icon: "📊", path: "/dashboard" },
     { name: "Mes Demandes", icon: "📝", path: "/dashboard/my-requests" },
-    { name: "Validations", icon: "✅", path: "/dashboard/validations", roles: ["Admin", "Validateur"] },
-    { name: "Utilisateurs", icon: "👥", path: "/dashboard/users", roles: ["Admin"] },
+    { name: "Validations", icon: "⚖️", path: "/dashboard/validations", roles: ["Validateur"] },
   ];
 
   return (

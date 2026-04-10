@@ -1,17 +1,28 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { orderService, Order } from "@/lib/orderService";
+import { useRouter } from "next/navigation";
+import { auth } from "@/lib/firebase";
+import { onAuthStateChanged } from "firebase/auth";
+import { orderService, Order, isAdmin } from "@/lib/orderService";
 
 export default function ValidationsPage() {
+  const router = useRouter();
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [comment, setComment] = useState("");
 
   useEffect(() => {
-    fetchPendingOrders();
-  }, []);
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (!user || !isAdmin(user.email)) {
+        router.push("/dashboard");
+      } else {
+        fetchPendingOrders();
+      }
+    });
+    return () => unsubscribe();
+  }, [router]);
 
   const fetchPendingOrders = async () => {
     setIsLoading(true);
