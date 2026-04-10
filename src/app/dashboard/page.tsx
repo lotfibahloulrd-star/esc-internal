@@ -170,6 +170,9 @@ export default function DashboardPage() {
           ))}
         </div>
       </div>
+      <div style={{ textAlign: "center", marginTop: "40px", fontSize: "0.7rem", color: "var(--border)" }}>
+        Version 1.2 - Déploiement Automatique Actif
+      </div>
     </div>
   );
 }
