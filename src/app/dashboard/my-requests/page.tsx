@@ -225,11 +225,12 @@ export default function MyRequestsPage() {
                   onChange={(e) => setType(e.target.value)}
                   required
                 >
-                  <option value="Bureautique">Bureautique</option>
-                  <option value="Informatique">Informatique</option>
-                  <option value="Consommable">Consommable</option>
-                  <option value="Détergents">Détergents</option>
-                  <option value="Autre">Autre</option>
+                  <option value="Consommable Informatique">🖥️ Consommable Informatique</option>
+                  <option value="Équipement Informatique">⚙️ Équipement Informatique</option>
+                  <option value="Fournitures de Bureau">📁 Fournitures de Bureau</option>
+                  <option value="Hygiène & Détergents">🧹 Hygiène & Détergents</option>
+                  <option value="Papeterie">📝 Papeterie</option>
+                  <option value="Autre">📦 Autre</option>
                 </select>
               </div>
               <div className="form-group">
@@ -240,6 +241,7 @@ export default function MyRequestsPage() {
                   value={desc}
                   onChange={(e) => setDesc(e.target.value)}
                   required 
+                  className="glass"
                 />
               </div>
               <div className="form-group">
@@ -250,6 +252,7 @@ export default function MyRequestsPage() {
                   value={qty}
                   onChange={(e) => setQty(e.target.value)}
                   required 
+                  className="glass"
                 />
               </div>
               <div className="form-group">
@@ -257,6 +260,7 @@ export default function MyRequestsPage() {
                 <select
                   value={urgency}
                   onChange={(e) => setUrgency(e.target.value)}
+                  className="glass"
                 >
                   <option value="Normale">⚡ Normale</option>
                   <option value="Haute">🔥 Haute</option>

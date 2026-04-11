@@ -32,10 +32,13 @@ export const SUPER_ADMINS = [
 
 export const VALIDATORS = [
   "a.ouali@esclab-algerie.com",
-  "l.bahloul@esclab-algerie.com", // Also a validator
-  "l.naitsidous@esclab-algerie.com",
-  "s.ouatmani@esclab-algerie.com"
+  "l.bahloul@esclab-algerie.com"
 ];
+
+export const HANDLERS = {
+  IT: "l.naitsidous@esclab-algerie.com",
+  OFFICE: "a.boumedjmadjen@esclab-algerie.com"
+};
 
 export const isAdmin = (email: string | null | undefined) => {
   if (!email) return false;
@@ -43,12 +46,26 @@ export const isAdmin = (email: string | null | undefined) => {
   return VALIDATORS.includes(e) || SUPER_ADMINS.includes(e);
 };
 
+export const isHandler = (email: string | null | undefined) => {
+  if (!email) return false;
+  const e = email.toLowerCase();
+  return Object.values(HANDLERS).includes(e);
+};
+
 export const getRoleLabel = (email: string | null | undefined) => {
   if (!email) return "Utilisateur";
   const e = email.toLowerCase();
   if (SUPER_ADMINS.includes(e)) return "Super Administrateur";
   if (VALIDATORS.includes(e)) return "Validateur";
+  if (Object.values(HANDLERS).includes(e)) return "Service Traitement";
   return "Utilisateur";
+};
+
+export const getCategoryAssignment = (type: string) => {
+  const t = type.toLowerCase();
+  if (t.includes('informatique') || t.includes('équipement')) return 'IT';
+  if (t.includes('bureau') || t.includes('détergent') || t.includes('papeterie') || t.includes('ménage')) return 'OFFICE';
+  return 'OTHER';
 };
 
 export const orderService = {
@@ -80,6 +97,27 @@ export const orderService = {
       id: doc.id,
       ...doc.data()
     })) as Order[];
+  },
+
+  async getProcessingOrders(handlerEmail: string) {
+    const q = query(
+      collection(db, "orders"), 
+      where("status", "==", "Validée"),
+      orderBy("created_at", "desc")
+    );
+
+    const querySnapshot = await getDocs(q);
+    const allValid = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    })) as Order[];
+
+    // Filtrage par catégorie selon le handler
+    const handlerType = Object.keys(HANDLERS).find(key => HANDLERS[key as keyof typeof HANDLERS] === handlerEmail.toLowerCase());
+    
+    if (!handlerType) return [];
+
+    return allValid.filter(order => getCategoryAssignment(order.type) === handlerType);
   },
 
   async createOrder(order: Omit<Order, 'id' | 'created_at' | 'status'>) {

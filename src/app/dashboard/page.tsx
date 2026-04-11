@@ -31,7 +31,7 @@ export default function DashboardPage() {
     { label: "Total Demandes", value: orders.length.toString(), icon: "📦", color: "var(--primary)" },
     { label: "En Attente", value: orders.filter(o => o.status === "En attente").length.toString(), icon: "⏳", color: "var(--warning)" },
     { label: "Validées", value: orders.filter(o => o.status === "Validée").length.toString(), icon: "✅", color: "var(--success)" },
-    { label: "Rejetées", value: orders.filter(o => o.status === "Rejetée").length.toString(), icon: "❌", color: "var(--danger)" },
+    { label: "Traitées/Rejetées", value: orders.filter(o => ["Traitée", "Rejetée"].includes(o.status)).length.toString(), icon: "🏁", color: "var(--danger)" },
   ];
 
   return (

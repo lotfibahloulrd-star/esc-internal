@@ -39,6 +39,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { name: "Tableau de Bord", icon: "📊", path: "/dashboard" },
     { name: "Mes Demandes", icon: "📝", path: "/dashboard/my-requests" },
     { name: "Validations", icon: "⚖️", path: "/dashboard/validations", roles: ["Validateur", "Super Administrateur"] },
+    { name: "Traitements", icon: "📦", path: "/dashboard/processing", roles: ["Service Traitement", "Super Administrateur"] },
   ];
 
   return (
