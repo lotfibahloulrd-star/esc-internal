@@ -119,6 +119,18 @@ export const orderService = {
     })) as Order[];
   },
 
+  async getDomainOrders(handlerEmail: string) {
+    const allOrders = await this.getAllOrders();
+    const email = handlerEmail.toLowerCase().trim();
+    
+    if (isAdmin(email)) return allOrders;
+
+    const handlerType = Object.keys(HANDLERS).find(key => HANDLERS[key as keyof typeof HANDLERS] === email);
+    if (!handlerType) return [];
+
+    return allOrders.filter(order => getCategoryAssignment(order.type) === handlerType);
+  },
+
   async getProcessingOrders(handlerEmail: string) {
     const q = query(
       collection(db, "orders"), 

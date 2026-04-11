@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { orderService, Order, isAdmin, isMasterAdmin } from "@/lib/orderService";
+import { orderService, Order, isAdmin, isMasterAdmin, isHandler } from "@/lib/orderService";
 import { auth } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { useRouter } from "next/navigation";
@@ -30,9 +30,14 @@ export default function DashboardPage() {
   const fetchData = async (email: string | null) => {
     setIsLoading(true);
     try {
-      const data = isAdmin(email) 
-        ? await orderService.getAllOrders() 
-        : await orderService.getMyOrders();
+      let data = [];
+      if (isAdmin(email)) {
+        data = await orderService.getAllOrders();
+      } else if (isHandler(email)) {
+        data = await orderService.getDomainOrders(email || "");
+      } else {
+        data = await orderService.getMyOrders();
+      }
       
       // Tri intelligent par statut
       const statusPriority: {[key: string]: number} = {
