@@ -39,9 +39,18 @@ export const VALIDATORS = [
   "belhocine@esclab-algerie.com"
 ];
 
-export const HANDLERS = {
-  IT: "l.naitsidous@esclab-algerie.com",
-  OFFICE: "a.boumedjmadjen@esclab-algerie.com"
+export const MASTER_ADMINS = [
+  "l.bahloul@esclab-algerie.com",
+  "belhocine@esclab-algerie.com",
+  "a.ouali@esclab-algerie.com",
+  "l.naitsidous@esclab-algerie.com",
+  "a.boumedjmadjen@esclab-algerie.com"
+];
+
+export const isMasterAdmin = (email: string | null | undefined) => {
+  if (!email) return false;
+  const e = email.toLowerCase().trim();
+  return MASTER_ADMINS.map(v => v.toLowerCase().trim()).includes(e);
 };
 
 export const isAdmin = (email: string | null | undefined) => {
@@ -151,6 +160,14 @@ export const orderService = {
     if (price) updateData.price = price;
     
     await updateDoc(orderRef, updateData);
+  },
+
+  async masterUpdateOrder(orderId: string, data: Partial<Order>) {
+    const orderRef = doc(db, "orders", orderId);
+    await updateDoc(orderRef, {
+        ...data,
+        master_edited_at: serverTimestamp()
+    });
   },
 
   async getProfiles() {

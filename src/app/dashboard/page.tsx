@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { orderService, Order, isAdmin } from "@/lib/orderService";
+import { orderService, Order, isAdmin, isMasterAdmin } from "@/lib/orderService";
 import { auth } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { useRouter } from "next/navigation";
@@ -11,8 +11,10 @@ export default function DashboardPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState<"All" | "En attente" | "Validée" | "Valorisation" | "Traitée" | "Rejetée" | "Annulée">("All");
-  const [editingPriceId, setEditingPriceId] = useState<string | null>(null);
-  const [newPrice, setNewPrice] = useState("");
+  
+  // Master Edit State
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [editForm, setEditForm] = useState<Partial<Order>>({});
 
   const user = auth.currentUser;
 
@@ -44,14 +46,21 @@ export default function DashboardPage() {
       return order.status;
   };
 
-  const handleUpdatePrice = async (orderId: string) => {
+  const openMasterEdit = (order: Order) => {
+      if (!isMasterAdmin(user?.email)) return;
+      setSelectedOrder(order);
+      setEditForm({ ...order });
+  };
+
+  const handleMasterSave = async () => {
+      if (!selectedOrder?.id) return;
       try {
-          // Utilise updateOrderStatus pour mettre à jour le prix sans changer le statut
-          await orderService.updateOrderStatus(orderId, "Traitée", "Prix rectifié par SuperAdmin.", "SuperAdmin", newPrice);
-          setEditingPriceId(null);
+          await orderService.masterUpdateOrder(selectedOrder.id, editForm);
+          setSelectedOrder(null);
           fetchData(user?.email || "");
+          alert("Modification maître réussie !");
       } catch (err) {
-          alert("Erreur lors de la mise à jour");
+          alert("Erreur lors de la modification maître");
       }
   };
 
@@ -106,6 +115,9 @@ export default function DashboardPage() {
         th { text-align: left; padding: 16px; color: #64748b; font-size: 0.7rem; text-transform: uppercase; border-bottom: 1px solid var(--border); }
         td { padding: 16px; border-bottom: 1px solid var(--border); font-size: 0.85rem; color: #1e293b; }
         
+        tr.clickable { cursor: pointer; transition: 0.2s; }
+        tr.clickable:hover { background: rgba(37, 99, 235, 0.03); }
+
         .status-tag {
           padding: 4px 10px;
           border-radius: 50px;
@@ -113,32 +125,25 @@ export default function DashboardPage() {
           font-weight: 800;
           text-transform: uppercase;
         }
-        .price-tag {
-            background: rgba(37, 99, 235, 0.08);
-            color: var(--primary);
-            padding: 6px 12px;
-            border-radius: 8px;
-            font-weight: 700;
-            font-size: 0.85rem;
-        }
-        .btn-edit-price {
-            border: none; background: none; color: var(--primary); font-size: 0.7rem; font-weight: 700; cursor: pointer; text-decoration: underline; margin-left: 10px;
-        }
-        .edit-input { width: 100px; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--primary); font-size: 0.8rem; }
+
+        /* Modal Styles */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .modal { background: white; width: 100%; max-width: 600px; padding: 40px; border-radius: 32px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.2); }
+        .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 24px; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        label { font-size: 0.7rem; font-weight: 800; color: #64748b; text-transform: uppercase; }
+        input, select, textarea { padding: 12px; border: 1px solid var(--border); border-radius: 12px; font-size: 0.9rem; font-weight: 500; }
+        input:focus { border-color: var(--primary); outline: none; }
       `}</style>
 
       <div className="welcome-header">
-        <h1 className="text-gradient">Supervision Totale</h1>
-        <p className="text-muted">Bonjour {user?.displayName || 'Admin'}, vous avez les pleins pouvoirs sur le flux.</p>
+        <h1 className="text-gradient">Pilotage ESC-Internal</h1>
+        <p className="text-muted">Bonjour {user?.displayName || 'Admin'}. {isMasterAdmin(user?.email) && "Cliquez sur une ligne pour modifier n'importe quel champ."}</p>
       </div>
 
       <div className="stats-grid">
         {stats.map((stat) => (
-          <div 
-            key={stat.type} 
-            className={`stat-card ${activeFilter === stat.type ? 'active' : ''}`}
-            onClick={() => setActiveFilter(stat.type as any)}
-          >
+          <div key={stat.type} className={`stat-card ${activeFilter === stat.type ? 'active' : ''}`} onClick={() => setActiveFilter(stat.type as any)}>
             <span className="stat-icon">{stat.icon}</span>
             <div className="stat-label">{stat.label}</div>
             <div className="stat-value" style={{ color: stat.color }}>{stat.value}</div>
@@ -148,8 +153,7 @@ export default function DashboardPage() {
 
       <div className="list-container animate-fade-in">
         <div className="table-header">
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 800 }}>Liste Master : {activeFilter === "All" ? "Toutes les catégories" : activeFilter}</h2>
-          <div style={{ fontSize: '0.8rem', opacity: 0.6 }}>{filteredOrders.length} demande(s) trouvée(s)</div>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 800 }}>Master List : {activeFilter === "All" ? "Global" : activeFilter}</h2>
         </div>
 
         {isLoading ? (
@@ -162,94 +166,51 @@ export default function DashboardPage() {
                   <th>Demandeur</th>
                   <th>Article / Objet</th>
                   <th>Prix (DZD)</th>
-                  <th>Statut du dossier</th>
-                  <th>Validateur</th>
-                  <th>Date</th>
+                  <th>Statut</th>
+                  <th>Action Rapide</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredOrders.length === 0 ? (
-                  <tr><td colSpan={6} style={{ textAlign: 'center', padding: '40px' }}>Aucune demande disponible.</td></tr>
+                  <tr><td colSpan={5} style={{ textAlign: 'center', padding: '40px' }}>Aucune demande.</td></tr>
                 ) : (
                   filteredOrders.map((order) => {
                     const displayStatus = getOrderStatus(order);
                     return (
-                      <tr key={order.id}>
+                      <tr 
+                        key={order.id} 
+                        className={isMasterAdmin(user?.email) ? "clickable" : ""}
+                        onClick={() => openMasterEdit(order)}
+                      >
                         <td>
                           <div style={{ fontWeight: 700 }}>{order.user_name}</div>
-                          <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{order.user_email}</div>
+                          <div style={{ fontSize: '0.7rem', color: '#64748b' }}>{order.user_email}</div>
                         </td>
                         <td>
                           <div style={{ fontWeight: 600 }}>{order.description}</div>
                           <div style={{ fontSize: '0.75rem', opacity: 0.6 }}>Qté: {order.quantity} | {order.type}</div>
                         </td>
                         <td>
-                          {editingPriceId === order.id ? (
-                              <div className="flex gap-2">
-                                  <input 
-                                    className="edit-input" 
-                                    type="number" 
-                                    value={newPrice} 
-                                    onChange={e => setNewPrice(e.target.value)} 
-                                    autoFocus
-                                  />
-                                  <button onClick={() => handleUpdatePrice(order.id!)} style={{ fontSize: '0.7rem', color: 'var(--success)', fontWeight: 800 }}>✓</button>
-                                  <button onClick={() => setEditingPriceId(null)} style={{ fontSize: '0.7rem', color: 'var(--danger)', fontWeight: 800 }}>✕</button>
-                              </div>
-                          ) : (
-                            <div className="flex items-center">
-                                {order.price ? (
-                                    <span className="price-tag">{order.price} DZD</span>
-                                ) : (
-                                    <span style={{ color: '#f97316', fontWeight: 800, fontSize: '0.7rem' }}>NON VALORISÉE</span>
-                                )}
-                                {isAdmin(user?.email) && order.status === "Traitée" && (
-                                    <button className="btn-edit-price" onClick={() => {
-                                        setEditingPriceId(order.id!);
-                                        setNewPrice(order.price || "");
-                                    }}>Rectifier</button>
-                                )}
-                            </div>
-                          )}
+                          {order.price ? <span style={{ fontWeight: 800 }}>{order.price} DZD</span> : <span style={{ fontSize: '0.7rem', opacity: 0.3 }}>-</span>}
                         </td>
                         <td>
                           <span className="status-tag" style={{ 
                             background: displayStatus === "Valorisation" ? "rgba(249, 115, 22, 0.1)" :
                                        displayStatus === "Traitée" ? "rgba(16, 185, 129, 0.1)" : 
                                        displayStatus === "Annulée" ? "rgba(239, 68, 68, 0.1)" : 
-                                       displayStatus === "Validée" ? "rgba(37, 99, 235, 0.1)" : 
-                                       displayStatus === "En attente" ? "rgba(100, 116, 139, 0.1)" : "rgba(100, 116, 139, 0.1)",
+                                       displayStatus === "Validée" ? "rgba(37, 99, 235, 0.1)" : "#f1f5f9",
                             color: displayStatus === "Valorisation" ? "#f97316" :
                                    displayStatus === "Traitée" ? "#10b981" : 
-                                   displayStatus === "Annulée" ? "#ef4444" : 
-                                   displayStatus === "Validée" ? "#2563eb" : "#64748b"
-                          }}>
-                            {displayStatus === "Valorisation" ? "À valoriser" : displayStatus}
-                          </span>
+                                   displayStatus === "Annulée" ? "#ef4444" : "#2563eb"
+                          }}>{displayStatus}</span>
+                        </td>
+                        <td onClick={e => e.stopPropagation()}>
                           {displayStatus === "Valorisation" && isAdmin(user?.email) && (
-                              <button 
-                                onClick={() => router.push('/dashboard/processing')}
-                                style={{ marginLeft: '10px', fontSize: '0.65rem', background: '#f97316', color: 'white', border: 'none', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontWeight: 700 }}
-                              >
-                                VALORISER ➔
-                              </button>
+                              <button onClick={() => router.push('/dashboard/processing')} style={{ background: '#f97316', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '0.65rem', fontWeight: 700, cursor: 'pointer' }}>VALORISER</button>
                           )}
                           {displayStatus === "En attente" && isAdmin(user?.email) && (
-                              <button 
-                                onClick={() => router.push('/dashboard/validations')}
-                                style={{ marginLeft: '10px', fontSize: '0.65rem', background: '#3b82f6', color: 'white', border: 'none', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontWeight: 700 }}
-                              >
-                                DÉCIDER ➔
-                              </button>
+                              <button onClick={() => router.push('/dashboard/validations')} style={{ background: '#3b82f6', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '0.65rem', fontWeight: 700, cursor: 'pointer' }}>DÉCIDER</button>
                           )}
-                        </td>
-                        <td>
-                          <div style={{ fontWeight: 600 }}>{order.validator_name || "---"}</div>
-                        </td>
-                        <td>
-                          <div style={{ fontSize: '0.8rem', opacity: 0.7 }}>
-                            {order.created_at ? (order.created_at.toDate?.().toLocaleDateString() || new Date(order.created_at).toLocaleDateString()) : '-'}
-                          </div>
                         </td>
                       </tr>
                     );
@@ -261,9 +222,64 @@ export default function DashboardPage() {
         )}
       </div>
 
-      <div style={{ textAlign: "center", marginTop: "40px", fontSize: "0.7rem", color: "#94a3b8" }}>
-        Système de Supervision Intégrale ESC-Internal v1.8
-      </div>
+      {/* Master Edit Modal */}
+      {selectedOrder && (
+          <div className="modal-overlay" onClick={() => setSelectedOrder(null)}>
+              <div className="modal animate-fade-in" onClick={e => e.stopPropagation()}>
+                  <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Édition Maître : Commande</h2>
+                  <p style={{ color: '#64748b', fontSize: '0.9rem' }}>Vous modifiez la demande de {selectedOrder.user_name}</p>
+                  
+                  <div className="modal-grid">
+                      <div className="form-group">
+                          <label>Description de l'article</label>
+                          <input type="text" value={editForm.description || ""} onChange={e => setEditForm({...editForm, description: e.target.value})} />
+                      </div>
+                      <div className="form-group">
+                          <label>Quantité</label>
+                          <input type="text" value={editForm.quantity || ""} onChange={e => setEditForm({...editForm, quantity: e.target.value})} />
+                      </div>
+                      <div className="form-group">
+                          <label>Catégorie</label>
+                          <select value={editForm.type || ""} onChange={e => setEditForm({...editForm, type: e.target.value})}>
+                              <option>Equipment</option>
+                              <option>Consumable IT</option>
+                              <option>Office</option>
+                              <option>Cleaning</option>
+                              <option>Autre</option>
+                          </select>
+                      </div>
+                      <div className="form-group">
+                          <label>Statut Actuel</label>
+                          <select value={editForm.status || ""} onChange={e => setEditForm({...editForm, status: e.target.value})}>
+                              <option value="En attente">En attente</option>
+                              <option value="Validée">Validée / À Valoriser</option>
+                              <option value="Traitée">Traitée (Terminée)</option>
+                              <option value="Annulée">Annulée</option>
+                              <option value="Rejetée">Rejetée</option>
+                          </select>
+                      </div>
+                      <div className="form-group">
+                          <label>Prix (DZD)</label>
+                          <input type="number" value={editForm.price || ""} onChange={e => setEditForm({...editForm, price: e.target.value})} />
+                      </div>
+                      <div className="form-group">
+                          <label>Nom du Validateur</label>
+                          <input type="text" value={editForm.validator_name || ""} onChange={e => setEditForm({...editForm, validator_name: e.target.value})} />
+                      </div>
+                  </div>
+
+                  <div style={{ marginTop: '32px' }} className="form-group">
+                      <label>Commentaire Interne</label>
+                      <textarea rows={2} value={editForm.comment || ""} onChange={e => setEditForm({...editForm, comment: e.target.value})} />
+                  </div>
+
+                  <div className="flex gap-4" style={{ marginTop: '40px' }}>
+                      <button className="btn-primary w-full" onClick={handleMasterSave}>Enregistrer les modifications</button>
+                      <button className="btn-cancel w-full" style={{ padding: '12px', borderRadius: '12px', border: '1px solid var(--border)', fontWeight: 700 }} onClick={() => setSelectedOrder(null)}>Annuler</button>
+                  </div>
+              </div>
+          </div>
+      )}
     </div>
   );
 }
