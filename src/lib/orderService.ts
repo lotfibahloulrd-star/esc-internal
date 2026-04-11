@@ -11,6 +11,7 @@ import {
   serverTimestamp,
   Timestamp 
 } from 'firebase/firestore';
+import { notificationService } from './notificationService';
 
 export interface Order {
   id?: string;
@@ -150,6 +151,10 @@ export const orderService = {
       status: 'En attente',
       created_at: serverTimestamp()
     });
+    
+    // Notification mail aux validateurs
+    notificationService.notifyNewOrder({ id: docRef.id, ...order, status: 'En attente' });
+    
     return docRef.id;
   },
 
@@ -165,6 +170,17 @@ export const orderService = {
     if (price) updateData.price = price;
     
     await updateDoc(orderRef, updateData);
+
+    // Récupérer l'objet complet pour la notification
+    const orderData = (await (await getDocs(query(collection(db, 'orders'), where('__name__', '==', orderId)))).docs[0]?.data()) as Order;
+
+    // Notification à l'employé
+    notificationService.notifyStatusChange({ id: orderId, ...orderData }, status, comment);
+
+    // Si validée, aiguillage vers les traitants (Lamine/Amel)
+    if (status === 'Validée') {
+      notificationService.notifyAssignment({ id: orderId, ...orderData });
+    }
   },
 
   async masterUpdateOrder(orderId: string, data: Partial<Order>) {
@@ -173,6 +189,9 @@ export const orderService = {
         ...data,
         master_edited_at: serverTimestamp()
     });
+
+    // Optionnel: Notifier l'employé de la modification maître
+    notificationService.notifyStatusChange({ id: orderId, ...data } as Order, data.status || "Modifiée", "Modification administrative globale.");
   },
 
   async getProfiles() {
