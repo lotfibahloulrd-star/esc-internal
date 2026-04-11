@@ -25,15 +25,18 @@ export interface Order {
   comment?: string;
   processed_at?: any;
   validator_name?: string;
+  price?: string; // Nouveau champ Prix
 }
 
 export const SUPER_ADMINS = [
-  "l.bahloul@esclab-algerie.com"
+  "l.bahloul@esclab-algerie.com",
+  "belhocine@esclab-algerie.com" // Ajout de Belhocine
 ];
 
 export const VALIDATORS = [
   "a.ouali@esclab-algerie.com",
-  "l.bahloul@esclab-algerie.com"
+  "l.bahloul@esclab-algerie.com",
+  "belhocine@esclab-algerie.com"
 ];
 
 export const HANDLERS = {
@@ -131,14 +134,18 @@ export const orderService = {
     return docRef.id;
   },
 
-  async updateOrderStatus(orderId: string, status: string, comment: string, validatorName: string) {
+  async updateOrderStatus(orderId: string, status: string, comment: string, validatorName: string, price: string = "") {
     const orderRef = doc(db, "orders", orderId);
-    await updateDoc(orderRef, {
+    const updateData: any = {
       status,
       comment,
       validator_name: validatorName,
       processed_at: serverTimestamp()
-    });
+    };
+    
+    if (price) updateData.price = price;
+    
+    await updateDoc(orderRef, updateData);
   },
 
   async getProfiles() {

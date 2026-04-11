@@ -8,7 +8,7 @@ import { onAuthStateChanged } from "firebase/auth";
 export default function DashboardPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeFilter, setActiveFilter] = useState<"All" | "En attente" | "Validée" | "Traitée" | "Rejetée">("All");
+  const [activeFilter, setActiveFilter] = useState<"All" | "En attente" | "Validée" | "Valorisation" | "Traitée" | "Rejetée">("All");
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -28,15 +28,21 @@ export default function DashboardPage() {
     return () => unsubscribe();
   }, []);
 
+  const getOrderStatus = (order: Order) => {
+      if (order.status === "Validée" && !order.price) return "Valorisation";
+      return order.status;
+  };
+
   const filteredOrders = activeFilter === "All" 
     ? orders 
-    : orders.filter(o => o.status === activeFilter);
+    : orders.filter(o => getOrderStatus(o) === activeFilter);
 
   const stats = [
     { type: "All", label: "Total Demandes", value: orders.length.toString(), icon: "📦", color: "#3b82f6" },
     { type: "En attente", label: "En Attente", value: orders.filter(o => o.status === "En attente").length.toString(), icon: "⏳", color: "#f59e0b" },
-    { type: "Validée", label: "Validées", value: orders.filter(o => o.status === "Validée").length.toString(), icon: "✅", color: "#10b981" },
-    { type: "Traitée", label: "Traitées", value: orders.filter(o => o.status === "Traitée").length.toString(), icon: "🚚", color: "#8b5cf6" },
+    { type: "Valorisation", label: "A Valoriser", value: orders.filter(o => o.status === "Validée" && !o.price).length.toString(), icon: "💰", color: "#f97316" },
+    { type: "Validée", label: "Validées", value: orders.filter(o => o.status === "Validée" && o.price).length.toString(), icon: "✅", color: "#10b981" },
+    { type: "Traitée", label: "Clôturées", value: orders.filter(o => o.status === "Traitée").length.toString(), icon: "🏁", color: "#8b5cf6" },
     { type: "Rejetée", label: "Rejetées", value: orders.filter(o => o.status === "Rejetée").length.toString(), icon: "❌", color: "#ef4444" },
   ];
 
@@ -46,8 +52,8 @@ export default function DashboardPage() {
         .welcome-header { margin-bottom: 40px; }
         .stats-grid { 
           display: grid; 
-          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
-          gap: 20px; 
+          grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
+          gap: 16px; 
           margin-bottom: 48px; 
         }
         .stat-card {
@@ -59,18 +65,10 @@ export default function DashboardPage() {
           transition: var(--transition);
           position: relative;
         }
-        .stat-card:hover { 
-          transform: translateY(-5px); 
-          border-color: rgba(255,255,255,0.2);
-          background: var(--surface-hover);
-        }
-        .stat-card.active {
-          border-color: var(--primary);
-          background: rgba(59, 130, 246, 0.1);
-          box-shadow: 0 0 20px rgba(59, 130, 246, 0.1);
-        }
-        .stat-icon { font-size: 1.8rem; margin-bottom: 12px; display: block; }
-        .stat-label { color: var(--text-muted); font-size: 0.85rem; font-weight: 500; }
+        .stat-card:hover { transform: translateY(-5px); background: var(--surface-hover); }
+        .stat-card.active { border-color: var(--primary); background: rgba(59, 130, 246, 0.1); }
+        .stat-icon { font-size: 1.5rem; margin-bottom: 12px; display: block; }
+        .stat-label { color: var(--text-muted); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
         .stat-value { font-size: 1.8rem; font-weight: 800; }
 
         .list-container {
@@ -83,24 +81,29 @@ export default function DashboardPage() {
         .table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
         
         table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; padding: 16px; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; border-bottom: 1px solid var(--border); }
-        td { padding: 16px; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
-        
-        .user-info { display: flex; align-items: center; gap: 10px; }
-        .avatar-sm { width: 28px; height: 28px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; }
+        th { text-align: left; padding: 16px; color: var(--text-muted); font-size: 0.7rem; text-transform: uppercase; border-bottom: 1px solid var(--border); }
+        td { padding: 16px; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
         
         .status-tag {
           padding: 4px 10px;
           border-radius: 50px;
-          font-size: 0.7rem;
-          font-weight: 700;
+          font-size: 0.65rem;
+          font-weight: 800;
           text-transform: uppercase;
+        }
+        .price-tag {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 0.8rem;
         }
       `}</style>
 
       <div className="welcome-header">
-        <h1 className="text-gradient">Tableau de Bord</h1>
-        <p className="text-muted">Cliquez sur une catégorie pour filtrer les demandes.</p>
+        <h1 className="text-gradient">Tableau de Bord Financier</h1>
+        <p className="text-muted">Suivi des demandes, validations et valorisations de prix.</p>
       </div>
 
       <div className="stats-grid">
@@ -113,9 +116,6 @@ export default function DashboardPage() {
             <span className="stat-icon">{stat.icon}</span>
             <div className="stat-label">{stat.label}</div>
             <div className="stat-value" style={{ color: stat.color }}>{stat.value}</div>
-            {activeFilter === stat.type && (
-              <div style={{ position: 'absolute', bottom: '12px', right: '12px', fontSize: '1rem' }}>🎯</div>
-            )}
           </div>
         ))}
       </div>
@@ -123,23 +123,20 @@ export default function DashboardPage() {
       <div className="list-container">
         <div className="table-header">
           <h2 style={{ fontSize: '1.25rem' }}>
-            {activeFilter === "All" ? "Toutes les demandes" : `Demandes : ${activeFilter}`}
+            {activeFilter === "All" ? "Toutes les demandes" : `Focus : ${activeFilter}`}
           </h2>
-          <div className="badge" style={{ background: 'rgba(255,255,255,0.05)', padding: '6px 16px', borderRadius: '50px', fontSize: '0.8rem' }}>
-            {filteredOrders.length} résultat(s)
-          </div>
         </div>
 
         {isLoading ? (
-          <div style={{ textAlign: 'center', padding: '40px' }}>Chargement des données...</div>
+          <div style={{ textAlign: 'center', padding: '40px' }}>Chargement...</div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table>
               <thead>
                 <tr>
                   <th>Demandeur</th>
-                  <th>Article / Description</th>
-                  <th>Type</th>
+                  <th>Article</th>
+                  <th>Prix (DZD)</th>
                   <th>Statut</th>
                   <th>Validateur / Traitant</th>
                   <th>Date</th>
@@ -147,53 +144,55 @@ export default function DashboardPage() {
               </thead>
               <tbody>
                 {filteredOrders.length === 0 ? (
-                  <tr><td colSpan={6} style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>Aucune donnée disponible.</td></tr>
+                  <tr><td colSpan={6} style={{ textAlign: 'center', padding: '40px' }}>Aucune demande dans cette catégorie.</td></tr>
                 ) : (
-                  filteredOrders.map((order) => (
-                    <tr key={order.id} className="animate-fade-in">
-                      <td>
-                        <div className="user-info">
-                          <div className="avatar-sm">{order.user_name.charAt(0)}</div>
-                          <div>
-                            <div style={{ fontWeight: 600 }}>{order.user_name}</div>
-                            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{order.user_email}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <div style={{ fontWeight: 500 }}>{order.description}</div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Qté: {order.quantity}</div>
-                      </td>
-                      <td><span style={{ fontSize: '0.8rem', opacity: 0.8 }}>{order.type}</span></td>
-                      <td>
-                        <span className="status-tag" style={{ 
-                          background: order.status === "Validée" ? "rgba(16, 185, 129, 0.1)" : 
-                                     order.status === "En attente" ? "rgba(245, 158, 11, 0.1)" : 
-                                     order.status === "Traitée" ? "rgba(139, 92, 246, 0.1)" : "rgba(239, 68, 68, 0.1)",
-                          color: order.status === "Validée" ? "#10b981" : 
-                                 order.status === "En attente" ? "#f59e0b" : 
-                                 order.status === "Traitée" ? "#8b5cf6" : "#ef4444"
-                        }}>
-                          {order.status}
-                        </span>
-                      </td>
-                      <td>
-                        {order.validator_name ? (
+                  filteredOrders.map((order) => {
+                    const displayStatus = getOrderStatus(order);
+                    return (
+                      <tr key={order.id} className="animate-fade-in">
+                        <td>
+                          <div style={{ fontWeight: 600 }}>{order.user_name}</div>
+                          <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{order.user_email}</div>
+                        </td>
+                        <td>
+                          <div style={{ fontWeight: 600 }}>{order.description}</div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Qté: {order.quantity}</div>
+                        </td>
+                        <td>
+                          {order.price ? (
+                            <span className="price-tag">{order.price} DZD</span>
+                          ) : (
+                            <span style={{ color: 'var(--warning)', fontSize: '0.75rem', fontWeight: 700 }}>À VALORISER</span>
+                          )}
+                        </td>
+                        <td>
+                          <span className="status-tag" style={{ 
+                            background: displayStatus === "Valorisation" ? "rgba(249, 115, 22, 0.1)" :
+                                       displayStatus === "Validée" ? "rgba(16, 185, 129, 0.1)" : 
+                                       displayStatus === "Traitée" ? "rgba(139, 92, 246, 0.1)" : 
+                                       displayStatus === "En attente" ? "rgba(245, 158, 11, 0.1)" : "rgba(239, 68, 68, 0.1)",
+                            color: displayStatus === "Valorisation" ? "#f97316" :
+                                   displayStatus === "Validée" ? "#10b981" : 
+                                   displayStatus === "Traitée" ? "#8b5cf6" : 
+                                   displayStatus === "En attente" ? "#f59e0b" : "#ef4444"
+                          }}>
+                            {displayStatus === "Valorisation" ? "En instance de valorisation" : displayStatus}
+                          </span>
+                        </td>
+                        <td>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                             <span style={{ fontSize: '0.9rem' }}>👤</span>
-                            <span>{order.validator_name}</span>
+                            <span style={{ fontWeight: 500 }}>{order.validator_name || "En attente"}</span>
                           </div>
-                        ) : (
-                          <span style={{ color: 'var(--text-muted)', fontStyle: 'italic', fontSize: '0.8rem' }}>Non traité</span>
-                        )}
-                      </td>
-                      <td>
-                        <div style={{ fontSize: '0.85rem' }}>
-                          {order.created_at ? (order.created_at.toDate?.().toLocaleDateString() || new Date(order.created_at).toLocaleDateString()) : '-'}
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+                        </td>
+                        <td>
+                          <div style={{ fontSize: '0.8rem' }}>
+                            {order.created_at ? (order.created_at.toDate?.().toLocaleDateString() || new Date(order.created_at).toLocaleDateString()) : '-'}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>
@@ -202,7 +201,7 @@ export default function DashboardPage() {
       </div>
 
       <div style={{ textAlign: "center", marginTop: "40px", fontSize: "0.7rem", color: "var(--border)" }}>
-        Version 1.3 - Dashboard Interactif & Traçabilité Active
+        Version 1.5 - Système de Valorisation Financière Obligatoire
       </div>
     </div>
   );
