@@ -40,7 +40,9 @@ export default function ValidationsPage() {
     if (!selectedOrder?.id) return;
     setIsLoading(true);
     try {
-      await orderService.updateOrderStatus(selectedOrder.id, status, comment);
+      const user = auth.currentUser;
+      const validatorName = user?.displayName || user?.email?.split('@')[0] || "Validateur";
+      await orderService.updateOrderStatus(selectedOrder.id, status, comment, validatorName);
       setSelectedOrder(null);
       setComment("");
       fetchPendingOrders();

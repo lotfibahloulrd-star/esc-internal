@@ -130,11 +130,12 @@ export const orderService = {
     return docRef.id;
   },
 
-  async updateOrderStatus(orderId: string, status: string, comment: string) {
+  async updateOrderStatus(orderId: string, status: string, comment: string, validatorName: string) {
     const orderRef = doc(db, "orders", orderId);
     await updateDoc(orderRef, {
       status,
       comment,
+      validator_name: validatorName,
       processed_at: serverTimestamp()
     });
   }

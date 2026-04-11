@@ -41,7 +41,9 @@ export default function ProcessingPage() {
     if (!confirm("Marquer cette commande comme traitée ?")) return;
     
     try {
-      await orderService.updateOrderStatus(orderId, "Traitée", "Commande traitée et finalisée.");
+      const user = auth.currentUser;
+      const handlerName = user?.displayName || user?.email?.split('@')[0] || "Gestionnaire";
+      await orderService.updateOrderStatus(orderId, "Traitée", "Commande traitée et finalisée.", handlerName);
       setOrders(orders.filter(o => o.id !== orderId));
     } catch (err) {
       alert("Erreur lors du traitement");
