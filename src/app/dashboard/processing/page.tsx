@@ -20,7 +20,8 @@ export default function ProcessingPage() {
       }
       
       const role = getRoleLabel(user.email);
-      if (role !== "Service Traitement" && role !== "Super Administrateur") {
+      // Autoriser les traitants ET les validateurs/admins
+      if (role !== "Service Traitement" && role !== "Validateur" && role !== "Super Administrateur") {
         router.push("/dashboard");
         return;
       }
@@ -38,22 +39,28 @@ export default function ProcessingPage() {
     return () => unsubscribe();
   }, [router]);
 
-  const handleProcess = async (orderId: string) => {
+  const handleProcess = async (orderId: string, status: "Traitée" | "Annulée") => {
     const price = prices[orderId];
-    if (!price || price.trim() === "") {
-        alert("Le prix est obligatoire pour clôturer la commande.");
-        return;
+    
+    if (status === "Traitée") {
+        if (!price || price.trim() === "") {
+            alert("Le prix est obligatoire pour clôturer la commande.");
+            return;
+        }
+        if (!confirm(`Clôturer cette commande avec un prix de ${price} DZD ?`)) return;
+    } else {
+        if (!confirm(`Voulez-vous vraiment ANNULER cette demande ?`)) return;
     }
-
-    if (!confirm(`Clôturer cette commande avec un prix de ${price} DZD ?`)) return;
     
     try {
       const user = auth.currentUser;
       const handlerName = user?.displayName || user?.email?.split('@')[0] || "Gestionnaire";
-      await orderService.updateOrderStatus(orderId, "Traitée", "Commande traitée, valorisée et finalisée.", handlerName, price);
+      const comment = status === "Traitée" ? "Commande traitée, valorisée et finalisée." : "Demande validée annulée ultérieurement.";
+      
+      await orderService.updateOrderStatus(orderId, status, comment, handlerName, price || "");
       setOrders(orders.filter(o => o.id !== orderId));
     } catch (err) {
-      alert("Erreur lors du traitement");
+      alert("Erreur lors de la mise à jour");
     }
   };
 
@@ -79,8 +86,8 @@ export default function ProcessingPage() {
         .price-input-container {
             display: flex;
             flex-direction: column;
-            gap: 8px;
-            min-width: 250px;
+            gap: 12px;
+            min-width: 280px;
         }
 
         input {
@@ -93,16 +100,34 @@ export default function ProcessingPage() {
             width: 100%;
         }
 
+        .actions-row {
+            display: flex;
+            gap: 10px;
+        }
+
         .btn-process {
+          flex: 2;
           background: var(--success);
           color: white;
-          padding: 14px 24px;
+          padding: 14px;
           border-radius: 12px;
           font-weight: 700;
-          font-size: 0.9rem;
+          font-size: 0.85rem;
           transition: var(--transition);
-          white-space: nowrap;
         }
+        .btn-cancel {
+          flex: 1;
+          background: rgba(239, 68, 68, 0.1);
+          color: var(--danger);
+          border: 1px solid rgba(239, 68, 68, 0.2);
+          padding: 14px;
+          border-radius: 12px;
+          font-weight: 700;
+          font-size: 0.85rem;
+          transition: var(--transition);
+        }
+        .btn-cancel:hover { background: var(--danger); color: white; }
+
         .btn-process:disabled {
             opacity: 0.3;
             cursor: not-allowed;
@@ -120,19 +145,19 @@ export default function ProcessingPage() {
       `}</style>
 
       <div className="header">
-        <h1 className="text-gradient">Traitement & Valorisation</h1>
-        <p className="text-muted">Saisissez obligatoirement le prix pour clôturer les demandes.</p>
+        <h1 className="text-gradient">Traitements & Décisions</h1>
+        <p className="text-muted">Gérez les demandes validées : valorisez pour clôturer ou annulez si nécessaire.</p>
       </div>
 
       <div className="valuation-alert">
-        ⚠️ <strong>Important :</strong> Toutes les commandes ci-dessous sont en instance de valorisation financière. Lamine et Amina doivent renseigner le prix avant clôture.
+        ⚠️ <strong>Ouvrage Supervisé :</strong> Les validateurs (Bahloul, Ouali, Belhocine) et les traitants (Lamine, Amina) peuvent désormais clôturer ou annuler ces demandes.
       </div>
 
       <div className="orders-list">
         {isLoading ? (
           <div className="text-center py-10">Chargement...</div>
         ) : orders.length === 0 ? (
-          <div className="text-center py-10 text-muted">Aucune commande en attente de valorisation.</div>
+          <div className="text-center py-10 text-muted">Aucune demande validée en attente de décision finale.</div>
         ) : (
           orders.map((order) => (
             <div key={order.id} className="order-card">
@@ -140,28 +165,35 @@ export default function ProcessingPage() {
                 <div className="flex items-center gap-3 mb-2">
                   <span className="badge">{order.type}</span>
                   <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                    Demande de {order.user_name} • {new Date(order.created_at?.toDate?.() || order.created_at).toLocaleDateString()}
+                    Demande de {order.user_name} • Approuvée par {order.validator_name || "Admin"}
                   </span>
                 </div>
                 <h3 style={{ fontSize: '1.2rem', fontWeight: 600, marginBottom: '8px' }}>{order.description}</h3>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Quantité demandée: <strong>{order.quantity}</strong></p>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Quantité: <strong>{order.quantity}</strong></p>
               </div>
 
               <div className="price-input-container">
-                <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)' }}>PRIX UNITAIRE (DZD)</label>
                 <input 
                     type="number" 
-                    placeholder="0.00" 
+                    placeholder="Saisir prix DZD..." 
                     value={prices[order.id!] || ""}
                     onChange={(e) => setPrices({...prices, [order.id!]: e.target.value})}
                 />
-                <button 
-                    className="btn-process" 
-                    disabled={!prices[order.id!] || prices[order.id!].trim() === ""}
-                    onClick={() => handleProcess(order.id!)}
-                >
-                    Clôturer & Valoriser
-                </button>
+                <div className="actions-row">
+                    <button 
+                        className="btn-cancel" 
+                        onClick={() => handleProcess(order.id!, "Annulée")}
+                    >
+                        Annuler
+                    </button>
+                    <button 
+                        className="btn-process" 
+                        disabled={!prices[order.id!] || prices[order.id!].trim() === ""}
+                        onClick={() => handleProcess(order.id!, "Traitée")}
+                    >
+                        Clôturer (Payée)
+                    </button>
+                </div>
               </div>
             </div>
           ))

@@ -8,7 +8,7 @@ import { onAuthStateChanged } from "firebase/auth";
 export default function DashboardPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeFilter, setActiveFilter] = useState<"All" | "En attente" | "Validée" | "Valorisation" | "Traitée" | "Rejetée">("All");
+  const [activeFilter, setActiveFilter] = useState<"All" | "En attente" | "Validée" | "Valorisation" | "Traitée" | "Rejetée" | "Annulée">("All");
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -38,12 +38,12 @@ export default function DashboardPage() {
     : orders.filter(o => getOrderStatus(o) === activeFilter);
 
   const stats = [
-    { type: "All", label: "Total Demandes", value: orders.length.toString(), icon: "📦", color: "#3b82f6" },
-    { type: "En attente", label: "En Attente", value: orders.filter(o => o.status === "En attente").length.toString(), icon: "⏳", color: "#f59e0b" },
-    { type: "Valorisation", label: "A Valoriser", value: orders.filter(o => o.status === "Validée" && !o.price).length.toString(), icon: "💰", color: "#f97316" },
-    { type: "Validée", label: "Validées", value: orders.filter(o => o.status === "Validée" && o.price).length.toString(), icon: "✅", color: "#10b981" },
-    { type: "Traitée", label: "Clôturées", value: orders.filter(o => o.status === "Traitée").length.toString(), icon: "🏁", color: "#8b5cf6" },
-    { type: "Rejetée", label: "Rejetées", value: orders.filter(o => o.status === "Rejetée").length.toString(), icon: "❌", color: "#ef4444" },
+    { type: "All", label: "Total demandes", value: orders.length.toString(), icon: "📦", color: "#3b82f6" },
+    { type: "En attente", label: "En attente", value: orders.filter(o => o.status === "En attente").length.toString(), icon: "⏳", color: "#f59e0b" },
+    { type: "Valorisation", label: "À valoriser", value: orders.filter(o => o.status === "Validée" && !o.price).length.toString(), icon: "💰", color: "#f97316" },
+    { type: "Traitée", label: "Clôturées", value: orders.filter(o => o.status === "Traitée").length.toString(), icon: "🏁", color: "#10b981" },
+    { type: "Annulée", label: "Annulées", value: orders.filter(o => o.status === "Annulée").length.toString(), icon: "🚫", color: "#ef4444" },
+    { type: "Rejetée", label: "Rejetées", value: orders.filter(o => o.status === "Rejetée").length.toString(), icon: "❌", color: "#64748b" },
   ];
 
   return (
@@ -52,24 +52,25 @@ export default function DashboardPage() {
         .welcome-header { margin-bottom: 40px; }
         .stats-grid { 
           display: grid; 
-          grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
-          gap: 16px; 
+          grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); 
+          gap: 12px; 
           margin-bottom: 48px; 
         }
         .stat-card {
-          padding: 24px;
-          border-radius: 24px;
+          padding: 20px;
+          border-radius: 20px;
           background: var(--surface);
           border: 1px solid var(--border);
           cursor: pointer;
           transition: var(--transition);
           position: relative;
+          text-align: center;
         }
-        .stat-card:hover { transform: translateY(-5px); background: var(--surface-hover); }
+        .stat-card:hover { transform: translateY(-3px); background: var(--surface-hover); }
         .stat-card.active { border-color: var(--primary); background: rgba(59, 130, 246, 0.1); }
-        .stat-icon { font-size: 1.5rem; margin-bottom: 12px; display: block; }
-        .stat-label { color: var(--text-muted); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
-        .stat-value { font-size: 1.8rem; font-weight: 800; }
+        .stat-icon { font-size: 1.2rem; margin-bottom: 8px; display: block; }
+        .stat-label { color: var(--text-muted); font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+        .stat-value { font-size: 1.5rem; font-weight: 800; }
 
         .list-container {
           background: var(--surface);
@@ -87,7 +88,7 @@ export default function DashboardPage() {
         .status-tag {
           padding: 4px 10px;
           border-radius: 50px;
-          font-size: 0.65rem;
+          font-size: 0.6rem;
           font-weight: 800;
           text-transform: uppercase;
         }
@@ -102,8 +103,8 @@ export default function DashboardPage() {
       `}</style>
 
       <div className="welcome-header">
-        <h1 className="text-gradient">Tableau de Bord Financier</h1>
-        <p className="text-muted">Suivi des demandes, validations et valorisations de prix.</p>
+        <h1 className="text-gradient">Supervision des Commandes</h1>
+        <p className="text-muted">Vue d'ensemble et contrôle du flux de valorisation financière.</p>
       </div>
 
       <div className="stats-grid">
@@ -122,9 +123,7 @@ export default function DashboardPage() {
 
       <div className="list-container">
         <div className="table-header">
-          <h2 style={{ fontSize: '1.25rem' }}>
-            {activeFilter === "All" ? "Toutes les demandes" : `Focus : ${activeFilter}`}
-          </h2>
+          <h2 style={{ fontSize: '1.25rem' }}>聚焦 : {activeFilter === "All" ? "Toutes les demandes" : activeFilter}</h2>
         </div>
 
         {isLoading ? (
@@ -138,13 +137,13 @@ export default function DashboardPage() {
                   <th>Article</th>
                   <th>Prix (DZD)</th>
                   <th>Statut</th>
-                  <th>Validateur / Traitant</th>
+                  <th>Dernière Action</th>
                   <th>Date</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredOrders.length === 0 ? (
-                  <tr><td colSpan={6} style={{ textAlign: 'center', padding: '40px' }}>Aucune demande dans cette catégorie.</td></tr>
+                  <tr><td colSpan={6} style={{ textAlign: 'center', padding: '40px' }}>Aucune donnée.</td></tr>
                 ) : (
                   filteredOrders.map((order) => {
                     const displayStatus = getOrderStatus(order);
@@ -161,28 +160,29 @@ export default function DashboardPage() {
                         <td>
                           {order.price ? (
                             <span className="price-tag">{order.price} DZD</span>
-                          ) : (
-                            <span style={{ color: 'var(--warning)', fontSize: '0.75rem', fontWeight: 700 }}>À VALORISER</span>
-                          )}
+                          ) : displayStatus === "Valorisation" ? (
+                            <span style={{ color: '#f97316', fontSize: '0.7rem', fontWeight: 800 }}>À VALORISER</span>
+                          ) : <span style={{ opacity: 0.3 }}>-</span>}
                         </td>
                         <td>
                           <span className="status-tag" style={{ 
                             background: displayStatus === "Valorisation" ? "rgba(249, 115, 22, 0.1)" :
-                                       displayStatus === "Validée" ? "rgba(16, 185, 129, 0.1)" : 
-                                       displayStatus === "Traitée" ? "rgba(139, 92, 246, 0.1)" : 
-                                       displayStatus === "En attente" ? "rgba(245, 158, 11, 0.1)" : "rgba(239, 68, 68, 0.1)",
+                                       displayStatus === "Traitée" ? "rgba(16, 185, 129, 0.1)" : 
+                                       displayStatus === "Annulée" ? "rgba(239, 68, 68, 0.1)" : 
+                                       displayStatus === "Validée" ? "rgba(59, 130, 246, 0.1)" : 
+                                       displayStatus === "En attente" ? "rgba(245, 158, 11, 0.1)" : "rgba(255,255,255,0.05)",
                             color: displayStatus === "Valorisation" ? "#f97316" :
-                                   displayStatus === "Validée" ? "#10b981" : 
-                                   displayStatus === "Traitée" ? "#8b5cf6" : 
-                                   displayStatus === "En attente" ? "#f59e0b" : "#ef4444"
+                                   displayStatus === "Traitée" ? "#10b981" : 
+                                   displayStatus === "Annulée" ? "#ef4444" : 
+                                   displayStatus === "#3b82f6" ? "#3b82f6" : "#f59e0b"
                           }}>
-                            {displayStatus === "Valorisation" ? "En instance de valorisation" : displayStatus}
+                            {displayStatus === "Valorisation" ? "À valoriser" : displayStatus}
                           </span>
                         </td>
                         <td>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <span style={{ fontSize: '0.9rem' }}>👤</span>
-                            <span style={{ fontWeight: 500 }}>{order.validator_name || "En attente"}</span>
+                            <span style={{ fontSize: '0.8rem' }}>👤</span>
+                            <span style={{ fontWeight: 500 }}>{order.validator_name || "En cours"}</span>
                           </div>
                         </td>
                         <td>
@@ -201,7 +201,7 @@ export default function DashboardPage() {
       </div>
 
       <div style={{ textAlign: "center", marginTop: "40px", fontSize: "0.7rem", color: "var(--border)" }}>
-        Version 1.5 - Système de Valorisation Financière Obligatoire
+        Version 1.6 - Contrôle de Traitement Universel
       </div>
     </div>
   );

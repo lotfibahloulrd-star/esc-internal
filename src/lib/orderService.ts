@@ -117,8 +117,13 @@ export const orderService = {
       ...doc.data()
     })) as Order[];
 
-    // Filtrage par catégorie selon le handler
-    const handlerType = Object.keys(HANDLERS).find(key => HANDLERS[key as keyof typeof HANDLERS] === handlerEmail.toLowerCase());
+    const email = handlerEmail.toLowerCase().trim();
+    
+    // Si l'utilisateur est un superviseur (Bahloul, Ouali, Belhocine), il voit TOUT
+    if (isAdmin(email)) return allValid;
+
+    // Sinon, c'est un traitant spécifique (Lamine, Amina)
+    const handlerType = Object.keys(HANDLERS).find(key => HANDLERS[key as keyof typeof HANDLERS] === email);
     
     if (!handlerType) return [];
 
