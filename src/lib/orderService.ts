@@ -139,5 +139,21 @@ export const orderService = {
       validator_name: validatorName,
       processed_at: serverTimestamp()
     });
+  },
+
+  async getProfiles() {
+    const q = query(collection(db, "profiles"), orderBy("name", "asc"));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    })) as { id: string, email: string, name: string, active: boolean }[];
+  },
+
+  async toggleProfileStatus(profileId: string, currentStatus: boolean) {
+    const profileRef = doc(db, "profiles", profileId);
+    await updateDoc(profileRef, {
+      active: !currentStatus
+    });
   }
 };

@@ -6,6 +6,8 @@ import Link from "next/link";
 import { auth } from "@/lib/firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { isAdmin, getRoleLabel } from "@/lib/orderService";
+import { db } from "@/lib/firebase";
+import { doc, setDoc, getDoc } from "firebase/firestore";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -13,16 +15,31 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [user, setUser] = useState<{name: string, role: string, email: string} | null>(null);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (!firebaseUser) {
         router.push("/login");
       } else {
         const email = firebaseUser.email || "";
-        setUser({
-          name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || "Utilisateur",
-          email: email,
-          role: getRoleLabel(email)
-        });
+        const name = firebaseUser.displayName || email.split('@')[0] || "Utilisateur";
+        const role = getRoleLabel(email);
+        
+        setUser({ name, email, role });
+
+        // Sync profile to Firestore
+        try {
+          const profileRef = doc(db, "profiles", email);
+          const profileSnap = await getDoc(profileRef);
+          if (!profileSnap.exists()) {
+            await setDoc(profileRef, {
+              email,
+              name,
+              active: true,
+              created_at: new Date().toISOString()
+            });
+          }
+        } catch (e) {
+          console.error("Profile sync error:", e);
+        }
       }
     });
 
@@ -40,6 +57,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { name: "Mes Demandes", icon: "📝", path: "/dashboard/my-requests" },
     { name: "Validations", icon: "⚖️", path: "/dashboard/validations", roles: ["Validateur", "Super Administrateur"] },
     { name: "Traitements", icon: "📦", path: "/dashboard/processing", roles: ["Service Traitement", "Super Administrateur"] },
+    { name: "Utilisateurs", icon: "👥", path: "/dashboard/users", roles: ["Super Administrateur"] },
   ];
 
   return (
