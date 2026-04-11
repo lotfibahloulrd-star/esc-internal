@@ -10,7 +10,7 @@ export default function MyRequestsPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   // Form states
-  const [type, setType] = useState("Bureautique");
+  const [type, setType] = useState("Consommable Informatique");
   const [desc, setDesc] = useState("");
   const [urgency, setUrgency] = useState("Normale");
   const [qty, setQty] = useState("");

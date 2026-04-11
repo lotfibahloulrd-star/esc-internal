@@ -1,0 +1,12 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /ESC-Internal/
+
+  # Empêcher la redirection vers www si l'utilisateur est sur le domaine nu
+  # (Ou l'inverse, on s'assure de l'uniformité)
+  
+  # Si le fichier demandé n'est pas un fichier réel, on laisse Next.js gérer
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^(.*)$ index.html [L]
+</IfModule>
