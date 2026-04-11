@@ -128,8 +128,8 @@ export default function MyRequestsPage() {
         .modal-overlay {
           position: fixed;
           top: 0; left: 0; width: 100%; height: 100%;
-          background: rgba(0, 0, 0, 0.8);
-          backdrop-filter: blur(8px);
+          background: rgba(15, 23, 42, 0.1);
+          backdrop-filter: blur(12px);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -137,12 +137,13 @@ export default function MyRequestsPage() {
         }
 
         .modal {
-          background: var(--surface);
+          background: white;
           width: 100%;
           max-width: 500px;
-          padding: 40px;
-          border-radius: 32px;
+          padding: 48px;
+          border-radius: 40px;
           border: 1px solid var(--border);
+          box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.1);
           animation: zoomIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
@@ -151,11 +152,18 @@ export default function MyRequestsPage() {
           to { transform: scale(1); opacity: 1; }
         }
 
-        .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; color: var(--text-muted); font-size: 0.85rem; }
+        .form-group { margin-bottom: 24px; }
+        label { display: block; margin-bottom: 10px; color: #64748b; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; }
         input, select, textarea {
-          width: 100%; background: var(--background); border: 1px solid var(--border);
-          padding: 12px; border-radius: 10px; color: white;
+          width: 100%; background: #f8fafc; border: 1px solid var(--border);
+          padding: 14px 18px; border-radius: 14px; color: var(--foreground);
+          font-weight: 500; transition: var(--transition);
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: white;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
         }
       `}</style>
 
