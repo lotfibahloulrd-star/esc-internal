@@ -98,7 +98,7 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="dashboard-content animate-fade-in">
+    <div className="dashboard-content">
       <style jsx>{`
         .welcome-header { margin-bottom: 32px; }
         .stats-grid { 

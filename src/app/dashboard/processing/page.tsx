@@ -65,7 +65,7 @@ export default function ProcessingPage() {
   };
 
   return (
-    <div className="processing-page animate-fade-in">
+    <div className="processing-page">
       <style jsx>{`
         .header { margin-bottom: 32px; }
         .order-card {
