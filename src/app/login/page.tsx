@@ -208,7 +208,8 @@ export default function LoginPage() {
         </form>
 
         <div className="footer">
-          &copy; 2026 ESC Algérie. Tous droits réservés.
+          &copy; 2026 ESC Algérie. Tous droits réservés.<br/>
+          <span style={{ opacity: 0.5, fontSize: '0.7rem' }}>v1.2</span>
         </div>
       </div>
     </div>
