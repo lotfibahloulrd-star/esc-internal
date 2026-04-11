@@ -55,7 +55,7 @@ export const notificationService = {
   // Appels vers le pont PHP sécurisé
   async sendEmail(to: string[], subject: string, body: string) {
     try {
-        const response = await fetch('/api/send_email.php', {
+        const response = await fetch('/ESC-Internal/api/send_email.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ to, subject, body })
