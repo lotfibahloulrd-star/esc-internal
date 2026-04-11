@@ -42,22 +42,23 @@ export const HANDLERS = {
 
 export const isAdmin = (email: string | null | undefined) => {
   if (!email) return false;
-  const e = email.toLowerCase();
-  return VALIDATORS.includes(e) || SUPER_ADMINS.includes(e);
+  const e = email.toLowerCase().trim();
+  return VALIDATORS.map(v => v.toLowerCase().trim()).includes(e) || 
+         SUPER_ADMINS.map(v => v.toLowerCase().trim()).includes(e);
 };
 
 export const isHandler = (email: string | null | undefined) => {
   if (!email) return false;
-  const e = email.toLowerCase();
-  return Object.values(HANDLERS).includes(e);
+  const e = email.toLowerCase().trim();
+  return Object.values(HANDLERS).map(v => v.toLowerCase().trim()).includes(e);
 };
 
 export const getRoleLabel = (email: string | null | undefined) => {
   if (!email) return "Utilisateur";
-  const e = email.toLowerCase();
-  if (SUPER_ADMINS.includes(e)) return "Super Administrateur";
-  if (VALIDATORS.includes(e)) return "Validateur";
-  if (Object.values(HANDLERS).includes(e)) return "Service Traitement";
+  const e = email.toLowerCase().trim();
+  if (SUPER_ADMINS.map(v => v.toLowerCase().trim()).includes(e)) return "Super Administrateur";
+  if (VALIDATORS.map(v => v.toLowerCase().trim()).includes(e)) return "Validateur";
+  if (Object.values(HANDLERS).map(v => v.toLowerCase().trim()).includes(e)) return "Service Traitement";
   return "Utilisateur";
 };
 
