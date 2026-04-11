@@ -65,7 +65,8 @@ export const notificationService = {
         if (result.status === 'success') {
             console.log("Email envoyé avec succès !");
         } else {
-            console.error("Échec de l'envoi du mail via PHP:", result.message);
+            console.error("Détails technique de l'échec mail:", result);
+            alert("Erreur technique d'envoi mail (Voir console): " + result.message);
         }
     } catch (err) {
         console.error("Erreur réseau mail:", err);

@@ -4,24 +4,13 @@ header("Access-Control-Allow-Methods: POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type");
 header("Content-Type: application/json");
 
-// Empêcher les accès directs via GET
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    exit;
-}
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') exit;
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    echo json_encode(["status" => "error", "message" => "Method not allowed"]);
-    exit;
-}
-
-// Récupération des données JSON
 $input = file_get_contents('php://input');
 $data = json_decode($input, true);
 
-if (!$data || !isset($data['to']) || !isset($data['subject']) || !isset($data['body'])) {
-    http_response_code(400);
-    echo json_encode(["status" => "error", "message" => "Missing data"]);
+if (!$data) {
+    echo json_encode(["status" => "error", "message" => "Données JSON invalides"]);
     exit;
 }
 
@@ -30,18 +19,30 @@ $subject = $data['subject'];
 $message = $data['body'];
 $from = "deploy-esc-internal@esclab-academy.com";
 
-$headers = [
-    "From: $from",
-    "Reply-To: $from",
-    "X-Mailer: PHP/" . phpversion(),
-    "Content-Type: text/plain; charset=utf-8"
-];
+// En-têtes plus complets pour éviter les filtres SPAM
+$headers = "From: ESC-Internal <$from>\r\n";
+$headers .= "Reply-To: $from\r\n";
+$headers .= "MIME-Version: 1.0\r\n";
+$headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
+$headers .= "X-Priority: 1\r\n";
+$headers .= "X-MSMail-Priority: High\r\n";
 
-// Envoi du mail
-if (mail($to, $subject, $message, implode("\r\n", $headers))) {
-    echo json_encode(["status" => "success", "message" => "Email sent"]);
-} else {
-    http_response_code(500);
-    echo json_encode(["status" => "error", "message" => "Email failed to send"]);
+// Tentative d'envoi avec diagnostic
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+try {
+    if (mail($to, $subject, $message, $headers, "-f$from")) {
+        echo json_encode(["status" => "success", "message" => "Mail envoyé vers $to"]);
+    } else {
+        $last_error = error_get_last();
+        echo json_encode([
+            "status" => "error", 
+            "message" => "Le serveur mail a refusé l'envoi.",
+            "debug" => $last_error
+        ]);
+    }
+} catch (Exception $e) {
+    echo json_encode(["status" => "error", "message" => $e->getMessage()]);
 }
 ?>
