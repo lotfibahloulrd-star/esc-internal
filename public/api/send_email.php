@@ -58,7 +58,7 @@ function send_smtp_mail($to_array, $subject, $body, $host, $port, $user, $pass) 
 
         $headers = "MIME-Version: 1.0\r\n";
         $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
-        $headers .= "From: ESC-Internal <$user>\r\n";
+        $headers .= "From: Commandes Internes <$user>\r\n";
         $headers .= "To: " . implode(", ", $to_array) . "\r\n";
         $headers .= "Subject: =?UTF-8?B?" . base64_encode($subject) . "?=\r\n";
         $headers .= "Date: " . date("r") . "\r\n";

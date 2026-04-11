@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "ESC-Internal Orders",
-  description: "Système de gestion des commandes internes pour ESC Algérie",
+  title: "Commandes Internes",
+  description: "Système de suivi esclab",
 };
 
 export default function RootLayout({

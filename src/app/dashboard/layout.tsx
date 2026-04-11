@@ -175,9 +175,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       `}</style>
 
       <aside className="sidebar">
-        <div className="logo">
-          <span style={{ color: "var(--primary)" }}>📦</span>
-          <span className="text-gradient">ESC-Internal</span>
+        <div className="sidebar-header">
+          <span className="logo-icon">📦</span>
+          <span className="text-gradient">Commandes Internes</span>
         </div>
 
         <nav>

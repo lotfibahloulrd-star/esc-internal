@@ -172,7 +172,7 @@ export default function LoginPage() {
       <div className="login-card">
         <div className="logo-box">
           <div className="logo-icon">📦</div>
-          <h1 className="text-gradient">ESC-Internal</h1>
+          <h1 className="text-gradient">Commandes Internes</h1>
           <p>Système de Commandes</p>
         </div>
 
