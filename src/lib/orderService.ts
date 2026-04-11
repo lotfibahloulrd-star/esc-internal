@@ -24,6 +24,7 @@ export interface Order {
   status: string;
   comment?: string;
   processed_at?: any;
+  validator_name?: string;
 }
 
 export const SUPER_ADMINS = [
