@@ -14,35 +14,67 @@ if (!$data) {
     exit;
 }
 
-$to = implode(", ", $data['to']);
+$to = $data['to']; // Array of emails
 $subject = $data['subject'];
 $message = $data['body'];
-$from = "deploy-esc-internal@esclab-academy.com";
 
-// En-têtes plus complets pour éviter les filtres SPAM
-$headers = "From: ESC-Internal <$from>\r\n";
-$headers .= "Reply-To: $from\r\n";
-$headers .= "MIME-Version: 1.0\r\n";
-$headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
-$headers .= "X-Priority: 1\r\n";
-$headers .= "X-MSMail-Priority: High\r\n";
+// CONFIGURATION SMTP
+$smtp_server = "mail.esclab-academy.com";
+$smtp_port = 465; // Port SSL standard
+$smtp_user = "deploy-esc-internal@esclab-academy.com";
+$smtp_pass = "yLe*v4B5Rs,G$7*,";
 
-// Tentative d'envoi avec diagnostic
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+/**
+ * Fonction simplifiée pour envoyer via SMTP brut (Sockets)
+ * Pour éviter toute dépendance externe
+ */
+function send_smtp_mail($to_array, $subject, $body, $host, $port, $user, $pass) {
+    try {
+        $socket = fsockopen("ssl://" . $host, $port, $errno, $errstr, 15);
+        if (!$socket) throw new Exception("Connexion échouée: $errstr");
 
-try {
-    if (mail($to, $subject, $message, $headers, "-f$from")) {
-        echo json_encode(["status" => "success", "message" => "Mail envoyé vers $to"]);
-    } else {
-        $last_error = error_get_last();
-        echo json_encode([
-            "status" => "error", 
-            "message" => "Le serveur mail a refusé l'envoi.",
-            "debug" => $last_error
-        ]);
+        function get_resp($socket) {
+            $resp = "";
+            while ($str = fgets($socket, 515)) {
+                $resp .= $str;
+                if (substr($str, 3, 1) == " ") break;
+            }
+            return $resp;
+        }
+
+        get_resp($socket); // 220
+        fwrite($socket, "EHLO " . $host . "\r\n"); get_resp($socket);
+        fwrite($socket, "AUTH LOGIN\r\n"); get_resp($socket);
+        fwrite($socket, base64_encode($user) . "\r\n"); get_resp($socket);
+        fwrite($socket, base64_encode($pass) . "\r\n"); get_resp($socket);
+
+        fwrite($socket, "MAIL FROM: <$user>\r\n"); get_resp($socket);
+        
+        foreach ($to_array as $to) {
+            fwrite($socket, "RCPT TO: <$to>\r\n"); get_resp($socket);
+        }
+
+        fwrite($socket, "DATA\r\n"); get_resp($socket);
+
+        $headers = "MIME-Version: 1.0\r\n";
+        $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
+        $headers .= "From: ESC-Internal <$user>\r\n";
+        $headers .= "To: " . implode(", ", $to_array) . "\r\n";
+        $headers .= "Subject: =?UTF-8?B?" . base64_encode($subject) . "?=\r\n";
+        $headers .= "Date: " . date("r") . "\r\n";
+        $headers .= "X-Mailer: ESCLAB-Mailer/1.0\r\n";
+
+        fwrite($socket, $headers . "\r\n" . $body . "\r\n.\r\n"); get_resp($socket);
+        fwrite($socket, "QUIT\r\n"); fclose($socket);
+
+        return ["status" => "success", "message" => "Email envoyé via SMTP"];
+    } catch (Exception $e) {
+        return ["status" => "error", "message" => $e->getMessage()];
     }
-} catch (Exception $e) {
-    echo json_encode(["status" => "error", "message" => $e->getMessage()]);
 }
+
+// Lancement de l'envoi
+$result = send_smtp_mail($to, $subject, $message, $smtp_server, $smtp_port, $smtp_user, $smtp_pass);
+
+echo json_encode($result);
 ?>
