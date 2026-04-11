@@ -124,7 +124,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           justify-content: space-between;
           align-items: center;
           border-bottom: 1px solid var(--border);
-          background: rgba(2, 6, 23, 0.8);
+          background: rgba(255, 255, 255, 0.8);
           backdrop-filter: blur(8px);
           position: sticky;
           top: 0;

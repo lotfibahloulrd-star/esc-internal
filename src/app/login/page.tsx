@@ -33,31 +33,23 @@ export default function LoginPage() {
           display: flex;
           align-items: center;
           justify-content: center;
-          background: linear-gradient(135deg, #020617 0%, #0f172a 100%);
+          background: #f1f5f9;
+          background-image: 
+            radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.1) 0px, transparent 50%),
+            radial-gradient(at 100% 0%, rgba(124, 58, 237, 0.1) 0px, transparent 50%);
           position: relative;
           overflow: hidden;
         }
 
-        .login-container::before {
-          content: "";
-          position: absolute;
-          width: 500px;
-          height: 500px;
-          background: radial-gradient(circle, var(--primary-glow) 0%, transparent 70%);
-          top: -200px;
-          right: -100px;
-          opacity: 0.5;
-        }
-
         .login-card {
           width: 100%;
-          max-width: 420px;
-          padding: 48px;
-          border-radius: 32px;
-          background: rgba(15, 23, 42, 0.6);
+          max-width: 440px;
+          padding: 64px 48px;
+          border-radius: 40px;
+          background: rgba(255, 255, 255, 0.7);
           backdrop-filter: blur(20px);
-          border: 1px solid rgba(255, 255, 255, 0.05);
-          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+          border: 1px solid rgba(15, 23, 42, 0.08);
+          box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.1);
           animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
@@ -72,26 +64,29 @@ export default function LoginPage() {
         }
 
         .logo-icon {
-          width: 64px;
-          height: 64px;
+          width: 72px;
+          height: 72px;
           background: var(--primary);
-          border-radius: 18px;
+          border-radius: 20px;
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          font-size: 2rem;
+          font-size: 2.5rem;
           margin-bottom: 16px;
-          box-shadow: 0 0 20px var(--primary-glow);
+          box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3);
         }
 
         h1 {
-          font-size: 1.75rem;
+          font-size: 2rem;
+          font-weight: 800;
           margin-bottom: 8px;
+          color: #0f172a;
         }
 
         p {
           color: var(--text-muted);
-          font-size: 0.95rem;
+          font-size: 1rem;
+          font-weight: 500;
         }
 
         .form-group {
@@ -100,21 +95,21 @@ export default function LoginPage() {
 
         label {
           display: block;
-          font-size: 0.85rem;
-          font-weight: 500;
+          font-size: 0.75rem;
+          font-weight: 700;
           margin-bottom: 8px;
-          color: var(--text-muted);
+          color: #64748b;
           text-transform: uppercase;
-          letter-spacing: 0.05em;
+          letter-spacing: 0.1em;
         }
 
         input {
           width: 100%;
-          background: rgba(255, 255, 255, 0.03);
+          background: white;
           border: 1px solid var(--border);
           padding: 14px 18px;
-          border-radius: 12px;
-          color: white;
+          border-radius: 14px;
+          color: #0f172a;
           font-size: 1rem;
           transition: var(--transition);
         }
@@ -122,8 +117,7 @@ export default function LoginPage() {
         input:focus {
           outline: none;
           border-color: var(--primary);
-          background: rgba(255, 255, 255, 0.05);
-          box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+          box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
         }
 
         .btn-login {
@@ -131,8 +125,8 @@ export default function LoginPage() {
           background: var(--primary);
           color: white;
           padding: 16px;
-          border-radius: 12px;
-          font-weight: 600;
+          border-radius: 16px;
+          font-weight: 700;
           font-size: 1rem;
           display: flex;
           align-items: center;
@@ -140,12 +134,14 @@ export default function LoginPage() {
           gap: 12px;
           transition: var(--transition);
           margin-top: 32px;
+          border: none;
+          cursor: pointer;
         }
 
         .btn-login:hover {
-          background: #2563eb;
+          background: #1e40af;
           transform: translateY(-2px);
-          box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.4);
+          box-shadow: 0 10px 25px rgba(37, 99, 235, 0.4);
         }
 
         .btn-login:disabled {
@@ -154,9 +150,9 @@ export default function LoginPage() {
         }
 
         .loader {
-          width: 20px;
-          height: 20px;
-          border: 2px solid rgba(255, 255, 255, 0.3);
+          width: 22px;
+          height: 22px;
+          border: 3px solid rgba(255, 255, 255, 0.3);
           border-top-color: white;
           border-radius: 50%;
           animation: spin 0.8s linear infinite;
@@ -166,9 +162,10 @@ export default function LoginPage() {
 
         .footer {
           text-align: center;
-          margin-top: 32px;
-          font-size: 0.8rem;
-          color: #475569;
+          margin-top: 40px;
+          font-size: 0.75rem;
+          color: #94a3b8;
+          font-weight: 500;
         }
       `}</style>
 
@@ -176,12 +173,12 @@ export default function LoginPage() {
         <div className="logo-box">
           <div className="logo-icon">📦</div>
           <h1 className="text-gradient">ESC-Internal</h1>
-          <p>Commandes Internes</p>
+          <p>Système de Commandes</p>
         </div>
 
         <form onSubmit={handleLogin}>
           <div className="form-group">
-            <label>Email Professionnel</label>
+            <label>E-mail Pro</label>
             <input 
               type="email" 
               placeholder="ex: l.bahloul@esclab-algerie.com"
@@ -209,7 +206,7 @@ export default function LoginPage() {
 
         <div className="footer">
           &copy; 2026 ESC Algérie. Tous droits réservés.<br/>
-          <span style={{ opacity: 0.5, fontSize: '0.7rem' }}>v1.2</span>
+          <span style={{ opacity: 0.7, fontSize: '0.65rem' }}>Version 1.7 - Light Edition</span>
         </div>
       </div>
     </div>
