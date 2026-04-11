@@ -30,7 +30,7 @@ export interface Order {
 
 export const SUPER_ADMINS = [
   "l.bahloul@esclab-algerie.com",
-  "belhocine@esclab-algerie.com" // Ajout de Belhocine
+  "belhocine@esclab-algerie.com"
 ];
 
 export const VALIDATORS = [
@@ -46,6 +46,11 @@ export const MASTER_ADMINS = [
   "l.naitsidous@esclab-algerie.com",
   "a.boumedjmadjen@esclab-algerie.com"
 ];
+
+export const HANDLERS = {
+  IT: "l.naitsidous@esclab-algerie.com",
+  OFFICE: "a.boumedjmadjen@esclab-algerie.com"
+};
 
 export const isMasterAdmin = (email: string | null | undefined) => {
   if (!email) return false;
