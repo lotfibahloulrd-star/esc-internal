@@ -4,8 +4,10 @@ import React, { useEffect, useState } from "react";
 import { orderService, Order, isAdmin } from "@/lib/orderService";
 import { auth } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
+import { useRouter } from "next/navigation";
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState<"All" | "En attente" | "Validée" | "Valorisation" | "Traitée" | "Rejetée" | "Annulée">("All");
@@ -224,6 +226,22 @@ export default function DashboardPage() {
                           }}>
                             {displayStatus === "Valorisation" ? "À valoriser" : displayStatus}
                           </span>
+                          {displayStatus === "Valorisation" && isAdmin(user?.email) && (
+                              <button 
+                                onClick={() => router.push('/dashboard/processing')}
+                                style={{ marginLeft: '10px', fontSize: '0.65rem', background: '#f97316', color: 'white', border: 'none', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontWeight: 700 }}
+                              >
+                                VALORISER ➔
+                              </button>
+                          )}
+                          {displayStatus === "En attente" && isAdmin(user?.email) && (
+                              <button 
+                                onClick={() => router.push('/dashboard/validations')}
+                                style={{ marginLeft: '10px', fontSize: '0.65rem', background: '#3b82f6', color: 'white', border: 'none', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontWeight: 700 }}
+                              >
+                                DÉCIDER ➔
+                              </button>
+                          )}
                         </td>
                         <td>
                           <div style={{ fontWeight: 600 }}>{order.validator_name || "---"}</div>

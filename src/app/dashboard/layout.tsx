@@ -57,6 +57,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { name: "Mes Demandes", icon: "📝", path: "/dashboard/my-requests" },
     { name: "Validations", icon: "⚖️", path: "/dashboard/validations", roles: ["Validateur", "Super Administrateur"] },
     { name: "Traitements", icon: "📦", path: "/dashboard/processing", roles: ["Service Traitement", "Super Administrateur"] },
+    { name: "Finances", icon: "💰", path: "/dashboard/finance", roles: ["Super Administrateur"] },
     { name: "Utilisateurs", icon: "👥", path: "/dashboard/users", roles: ["Super Administrateur"] },
   ];
 
