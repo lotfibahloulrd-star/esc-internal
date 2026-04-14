@@ -31,26 +31,26 @@ export interface Order {
 
 export const SUPER_ADMINS = [
   "l.bahloul@esclab-algerie.com",
-  "belhocine@esclab-algerie.com"
+  "s.ouatmani@esclab-algerie.com"
 ];
 
 export const VALIDATORS = [
   "a.ouali@esclab-algerie.com",
   "l.bahloul@esclab-algerie.com",
-  "belhocine@esclab-algerie.com"
+  "s.ouatmani@esclab-algerie.com"
 ];
 
 export const MASTER_ADMINS = [
   "l.bahloul@esclab-algerie.com",
-  "belhocine@esclab-algerie.com",
+  "s.ouatmani@esclab-algerie.com",
   "a.ouali@esclab-algerie.com",
   "l.naitsidous@esclab-algerie.com",
-  "a.boumedjmadjen@esclab-algerie.com"
+  "boumedjmadjen.amina@esclab-algerie.com"
 ];
 
 export const HANDLERS = {
   IT: "l.naitsidous@esclab-algerie.com",
-  OFFICE: "a.boumedjmadjen@esclab-algerie.com"
+  OFFICE: "boumedjmadjen.amina@esclab-algerie.com"
 };
 
 export const isMasterAdmin = (email: string | null | undefined) => {

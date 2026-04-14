@@ -28,10 +28,10 @@ export const notificationService = {
   // 3. Aiguillage intelligent vers les traitants (Lamine / Amel)
   async notifyAssignment(order: Order) {
     const lamine = "l.naitsidous@esclab-algerie.com";
-    const boumedjmadjen = "a.boumedjmadjen@esclab-algerie.com";
-    const belhocine = "belhocine@esclab-algerie.com";
+    const boumedjmadjen = "boumedjmadjen.amina@esclab-algerie.com";
+    const ouatmani = "s.ouatmani@esclab-algerie.com";
 
-    let recipients: string[] = [belhocine];
+    let recipients: string[] = [ouatmani];
     const type = order.type.toLowerCase();
     
     if (type.includes("autre")) {
