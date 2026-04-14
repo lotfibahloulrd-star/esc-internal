@@ -20,26 +20,33 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         router.push("/login");
       } else {
         const email = firebaseUser.email || "";
-        const name = firebaseUser.displayName || email.split('@')[0] || "Utilisateur";
-        const role = getRoleLabel(email);
+        const profileRef = doc(db, "profiles", email);
+        const profileSnap = await getDoc(profileRef);
+        let profileData = profileSnap.data();
+
+        // 1. Protection Compte Inactif
+        if (profileSnap.exists() && profileData?.active === false) {
+          await signOut(auth);
+          router.push("/login?error=account_disabled");
+          return;
+        }
+
+        // 2. Synchronisation initiale si inexistante
+        if (!profileSnap.exists()) {
+          const initialData = {
+            email,
+            name: firebaseUser.displayName || email.split('@')[0] || "Utilisateur",
+            active: true,
+            created_at: new Date().toISOString()
+          };
+          await setDoc(profileRef, initialData);
+          profileData = initialData;
+        }
+
+        const name = profileData?.name || firebaseUser.displayName || email.split('@')[0];
+        const role = getRoleLabel(email, profileData);
         
         setUser({ name, email, role });
-
-        // Sync profile to Firestore
-        try {
-          const profileRef = doc(db, "profiles", email);
-          const profileSnap = await getDoc(profileRef);
-          if (!profileSnap.exists()) {
-            await setDoc(profileRef, {
-              email,
-              name,
-              active: true,
-              created_at: new Date().toISOString()
-            });
-          }
-        } catch (e) {
-          console.error("Profile sync error:", e);
-        }
       }
     });
 

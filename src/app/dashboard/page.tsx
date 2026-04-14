@@ -15,25 +15,29 @@ export default function DashboardPage() {
   // Master Edit State
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [editForm, setEditForm] = useState<Partial<Order>>({});
+  const [profile, setProfile] = useState<any>(null);
 
   const user = auth.currentUser;
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (u) => {
       if (u) {
-        fetchData(u.email);
+        const p = await orderService.getProfiles().then(profiles => profiles.find(pr => pr.email === u.email));
+        setProfile(p);
+        fetchData(u.email, p);
       }
     });
     return () => unsubscribe();
   }, []);
 
-  const fetchData = async (email: string | null) => {
+  const fetchData = async (email: string | null, p?: any) => {
     setIsLoading(true);
     try {
+      const currentProfile = p || profile;
       let data = [];
-      if (isAdmin(email)) {
+      if (isAdmin(email, currentProfile)) {
         data = await orderService.getAllOrders();
-      } else if (isHandler(email)) {
+      } else if (isHandler(email, currentProfile)) {
         data = await orderService.getDomainOrders(email || "");
       } else {
         data = await orderService.getMyOrders();
@@ -72,7 +76,7 @@ export default function DashboardPage() {
   };
 
   const openMasterEdit = (order: Order) => {
-      if (!isMasterAdmin(user?.email)) return;
+      if (!isMasterAdmin(user?.email, profile)) return;
       setSelectedOrder(order);
       setEditForm({ ...order });
   };
@@ -162,7 +166,7 @@ export default function DashboardPage() {
       <div className="welcome-header flex justify-between">
         <div>
           <h1 className="text-gradient">Pilotage des Commandes</h1>
-          <p className="text-muted">Bonjour {user?.displayName || 'Admin'}. {isMasterAdmin(user?.email) && "Cliquez sur une ligne pour l'éditer."}</p>
+          <p className="text-muted">Bonjour {user?.displayName || 'Admin'}. {isMasterAdmin(user?.email, profile) && "Cliquez sur une ligne pour l'éditer."}</p>
         </div>
         <div style={{ background: '#f1f5f9', padding: '8px 20px', borderRadius: '50px', height: 'fit-content', fontSize: '0.8rem', fontWeight: 600 }}>
           {orders.filter(o => o.status === 'En attente').length} Dossiers Urgents ⏳
@@ -205,7 +209,7 @@ export default function DashboardPage() {
                   filteredOrders.map((order) => {
                     const displayStatus = getOrderStatus(order);
                     return (
-                      <tr key={order.id} className={isMasterAdmin(user?.email) ? "clickable" : ""} onClick={() => openMasterEdit(order)}>
+                      <tr key={order.id} className={isMasterAdmin(user?.email, profile) ? "clickable" : ""} onClick={() => openMasterEdit(order)}>
                         <td style={{ width: '200px' }}>
                           <div style={{ fontWeight: 700 }}>{order.user_name}</div>
                           <div style={{ fontSize: '0.65rem', color: '#64748b' }}>{order.user_email}</div>
@@ -231,10 +235,10 @@ export default function DashboardPage() {
                           }}>{displayStatus}</span>
                         </td>
                         <td onClick={e => e.stopPropagation()}>
-                          {displayStatus === "Valorisation" && isAdmin(user?.email) && (
+                          {displayStatus === "Valorisation" && isAdmin(user?.email, profile) && (
                               <button onClick={() => router.push('/dashboard/processing')} style={{ background: '#f97316', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '8px', fontSize: '0.65rem', fontWeight: 800, cursor: 'pointer' }}>VALORISER</button>
                           )}
-                          {displayStatus === "En attente" && isAdmin(user?.email) && (
+                          {displayStatus === "En attente" && isAdmin(user?.email, profile) && (
                               <button onClick={() => router.push('/dashboard/validations')} style={{ background: '#2563eb', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '8px', fontSize: '0.65rem', fontWeight: 800, cursor: 'pointer' }}>DÉCIDER</button>
                           )}
                         </td>

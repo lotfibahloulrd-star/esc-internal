@@ -51,28 +51,36 @@ export const HANDLERS = {
   OFFICE: "boumedjmadjen.amina@esclab-algerie.com"
 };
 
-export const isMasterAdmin = (email: string | null | undefined) => {
+export const isMasterAdmin = (email: string | null | undefined, profile?: any) => {
   if (!email) return false;
   const e = email.toLowerCase().trim();
+  if (profile?.role === "Super Administrateur") return true;
   return MASTER_ADMINS.map(v => v.toLowerCase().trim()).includes(e);
 };
 
-export const isAdmin = (email: string | null | undefined) => {
+export const isAdmin = (email: string | null | undefined, profile?: any) => {
   if (!email) return false;
   const e = email.toLowerCase().trim();
+  if (profile?.role === "Super Administrateur" || profile?.role === "Validateur") return true;
   return VALIDATORS.map(v => v.toLowerCase().trim()).includes(e) || 
          SUPER_ADMINS.map(v => v.toLowerCase().trim()).includes(e);
 };
 
-export const isHandler = (email: string | null | undefined) => {
+export const isHandler = (email: string | null | undefined, profile?: any) => {
   if (!email) return false;
   const e = email.toLowerCase().trim();
+  if (profile?.role === "Service Traitement") return true;
   return Object.values(HANDLERS).map(v => v.toLowerCase().trim()).includes(e);
 };
 
-export const getRoleLabel = (email: string | null | undefined) => {
+export const getRoleLabel = (email: string | null | undefined, profile?: any) => {
   if (!email) return "Utilisateur";
   const e = email.toLowerCase().trim();
+  
+  // 1. Priorité aux données dynamiques du profil
+  if (profile?.role) return profile.role;
+  
+  // 2. Fallback sur les listes statiques
   if (SUPER_ADMINS.map(v => v.toLowerCase().trim()).includes(e)) return "Super Administrateur";
   if (VALIDATORS.map(v => v.toLowerCase().trim()).includes(e)) return "Validateur";
   if (Object.values(HANDLERS).map(v => v.toLowerCase().trim()).includes(e)) return "Service Traitement";
@@ -213,13 +221,21 @@ export const orderService = {
     return querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
-    })) as { id: string, email: string, name: string, active: boolean }[];
+    })) as { id: string, email: string, name: string, active: boolean, role?: string }[];
   },
 
   async toggleProfileStatus(profileId: string, currentStatus: boolean) {
     const profileRef = doc(db, "profiles", profileId);
     await updateDoc(profileRef, {
       active: !currentStatus
+    });
+  },
+
+  async updateUserProfile(email: string, data: any) {
+    const profileRef = doc(db, "profiles", email);
+    await updateDoc(profileRef, {
+        ...data,
+        updated_at: serverTimestamp()
     });
   }
 };

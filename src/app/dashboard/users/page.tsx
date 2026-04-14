@@ -7,14 +7,16 @@ import { onAuthStateChanged, sendPasswordResetEmail } from "firebase/auth";
 import { useRouter } from "next/navigation";
 
 export default function UsersManagementPage() {
-  const [profiles, setProfiles] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const router = useRouter();
+  const [selectedProfile, setSelectedProfile] = useState<any>(null);
+  const [newRole, setNewRole] = useState("");
+
+  const user = auth.currentUser;
+  const isAdminUser = isAdmin(user?.email);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        router.push("/login");
+    const unsubscribe = onAuthStateChanged(auth, async (u) => {
+      if (!u || !isAdmin(u.email)) {
+        router.push("/dashboard");
         return;
       }
       fetchProfiles();
@@ -35,6 +37,16 @@ export default function UsersManagementPage() {
     }
   };
 
+  const handleUpdateRole = async (email: string, role: string) => {
+      try {
+          await orderService.updateUserProfile(email, { role });
+          fetchProfiles();
+          alert("Permissions mises à jour !");
+      } catch (err) {
+          alert("Erreur lors de la mise à jour");
+      }
+  };
+
   const handleResetPassword = async (email: string) => {
     if (!confirm(`Envoyer un e-mail de réinitialisation de mot de passe à ${email} ?`)) return;
     try {
@@ -53,6 +65,13 @@ export default function UsersManagementPage() {
       alert("Erreur lors de la modification du statut");
     }
   };
+
+  const availableRoles = [
+      "Super Administrateur",
+      "Validateur",
+      "Service Traitement",
+      "Utilisateur"
+  ];
 
   return (
     <div className="users-page animate-fade-in">
@@ -102,6 +121,17 @@ export default function UsersManagementPage() {
           box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
         }
 
+        .role-selector {
+            margin-top: 16px;
+            padding: 8px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            color: white;
+            font-size: 0.8rem;
+            width: 100%;
+        }
+
         .actions {
           display: flex;
           gap: 12px;
@@ -139,7 +169,7 @@ export default function UsersManagementPage() {
           <p className="text-muted">Gérez les accès et les comptes de l'équipe.</p>
         </div>
         <div style={{ padding: '8px 20px', borderRadius: '50px', background: 'rgba(59,130,246,0.1)', color: 'var(--primary)', height: 'fit-content', fontWeight: 700, fontSize: '0.8rem' }}>
-          {profiles.length} Comptes Actifs
+          {profiles.length} Comptes Enregistrés
         </div>
       </div>
 
@@ -153,25 +183,39 @@ export default function UsersManagementPage() {
               <h3 style={{ fontSize: '1.25rem', marginBottom: '4px' }}>{p.name}</h3>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '16px' }}>{p.email}</p>
               
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-3">
                 <span style={{ 
                   padding: '4px 10px', 
                   borderRadius: '50px', 
                   fontSize: '0.65rem', 
                   fontWeight: 800, 
                   background: p.active ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                  color: p.active ? '#10b981' : '#ef4444'
+                  color: p.active ? '#10b981' : '#ef4444',
+                  width: 'fit-content'
                 }}>
                   {p.active ? "● COMPTE ACTIF" : "○ COMPTE DÉSACTIVÉ"}
                 </span>
+
+                <div className="flex flex-col gap-1">
+                    <label style={{ fontSize: '0.65rem', fontWeight: 800, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>Attribuer Permission / Rôle</label>
+                    <select 
+                        className="role-selector" 
+                        value={p.role || getRoleLabel(p.email)} 
+                        onChange={(e) => handleUpdateRole(p.email, e.target.value)}
+                    >
+                        {availableRoles.map(role => (
+                            <option key={role} value={role}>{role}</option>
+                        ))}
+                    </select>
+                </div>
               </div>
 
               <div className="actions">
                 <button className="btn-action" onClick={() => handleResetPassword(p.email)}>
-                  🔑 Nouveau MDP
+                  🔑 Reset PWD
                 </button>
                 <button className={`btn-action ${p.active ? 'btn-danger-soft' : ''}`} onClick={() => handleToggleStatus(p)}>
-                  {p.active ? "🚫 Désactiver" : "✅ Réactiver"}
+                  {p.active ? "🚫 Suspendre" : "✅ Activer"}
                 </button>
               </div>
             </div>

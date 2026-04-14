@@ -14,8 +14,14 @@ export default function ValidationsPage() {
   const [comment, setComment] = useState("");
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (!user || !isAdmin(user.email)) {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        router.push("/login");
+        return;
+      }
+      
+      const profile = await orderService.getProfiles().then(profiles => profiles.find(p => p.email === user.email));
+      if (!isAdmin(user.email, profile)) {
         router.push("/dashboard");
       } else {
         fetchPendingOrders();
