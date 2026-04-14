@@ -43,9 +43,7 @@ export const VALIDATORS = [
 export const MASTER_ADMINS = [
   "l.bahloul@esclab-algerie.com",
   "s.ouatmani@esclab-algerie.com",
-  "a.ouali@esclab-algerie.com",
-  "l.naitsidous@esclab-algerie.com",
-  "boumedjmadjen.amina@esclab-algerie.com"
+  "a.ouali@esclab-algerie.com"
 ];
 
 export const HANDLERS = {
@@ -128,7 +126,10 @@ export const orderService = {
     const handlerType = Object.keys(HANDLERS).find(key => HANDLERS[key as keyof typeof HANDLERS] === email);
     if (!handlerType) return [];
 
-    return allOrders.filter(order => getCategoryAssignment(order.type) === handlerType);
+    return allOrders.filter(order => 
+      getCategoryAssignment(order.type) === handlerType && 
+      order.status !== 'En attente'
+    );
   },
 
   async getProcessingOrders(handlerEmail: string) {
